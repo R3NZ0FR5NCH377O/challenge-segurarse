@@ -97,7 +97,7 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: "🛠️ Configuración de gcloud CLI completada para el proyecto ${{ secrets.GCP_PROJECT_ID }}."
+          message: "🛠️ Configuración de gcloud CLI completada para el proyecto."
       - name: Notificar fallo en configuración
         if: failure()
         uses: appleboy/telegram-action@master
