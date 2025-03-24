@@ -25,12 +25,15 @@ jobs:
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/challenge-segurarse:latest
 
-      - name: Set up gcloud CLI
-        uses: google-github-actions/setup-gcloud@v1
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }} 
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Deploy to Google Cloud Run
         run: |
