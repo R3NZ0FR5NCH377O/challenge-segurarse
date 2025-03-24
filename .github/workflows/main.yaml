@@ -1,4 +1,4 @@
-name: Docker CI/CD Pipeline
+name: Pipeline CI/CD Docker
 
 on:
   push:
@@ -6,81 +6,137 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  construir-y-desplegar:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Clonar repositorio
         uses: actions/checkout@v3
-      - name: Notify Checkout
+      - name: Notificar clonación
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: "✅ Checkout del repositorio completado en ${{ github.repository }} por ${{ github.actor }}."
+          message: "✅ Clonación del repositorio completada en ${{ github.repository }} por ${{ github.actor }}."
 
-      - name: Log in to DockerHub
+      - name: Iniciar sesión en DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Notify DockerHub Login
+      - name: Notificar inicio de sesión en DockerHub
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: "🔑 Inicio de sesión en DockerHub completado."
+      - name: Notificar fallo en inicio de sesión
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "❌ Fallo al iniciar sesión en DockerHub."
 
-      - name: Build Docker image
+      - name: Construir imagen Docker
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/challenge-segurarse:${{ github.sha }} .
-      - name: Notify Build
+      - name: Notificar construcción de imagen
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: "🏗️ Imagen Docker construida: ${{ secrets.DOCKERHUB_USERNAME }}/challenge-segurarse:${{ github.sha }}."
+      - name: Notificar fallo en construcción
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "❌ Fallo al construir la imagen Docker."
 
-      - name: Push Docker image
+      - name: Subir imagen Docker
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/challenge-segurarse:${{ github.sha }}
-      - name: Notify Push
+      - name: Notificar subida de imagen
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: "🚀 Imagen Docker subida a DockerHub: ${{ secrets.DOCKERHUB_USERNAME }}/challenge-segurarse:${{ github.sha }}."
+      - name: Notificar fallo en subida
+        if: failure stray()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "❌ Fallo al subir la imagen a DockerHub."
 
-      - name: Authenticate to Google Cloud
+      - name: Autenticar en Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-      - name: Notify GCP Auth
+      - name: Notificar autenticación en GCP
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: "🔐 Autenticación con Google Cloud completada."
+      - name: Notificar fallo en autenticación
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "❌ Fallo al autenticar con Google Cloud."
 
-      - name: Set up gcloud CLI
+      - name: Configurar gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-      - name: Notify gcloud Setup
+      - name: Notificar configuración de gcloud
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: "🛠️ Configuración de gcloud CLI completada para el proyecto ${{ secrets.GCP_PROJECT_ID }}."
+      - name: Notificar fallo en configuración
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "❌ Fallo al configurar gcloud CLI."
 
-      - name: Deploy to Google Cloud Run
+      - name: Analizar código con Bandit
+        run: |
+          pip install bandit
+          bandit -r . -f txt -o bandit-report.txt || true
+      - name: Notificar análisis de Bandit
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "🔍 Análisis estático con Bandit completado. Enviando reporte..."
+          document: bandit-report.txt
+
+      - name: Desplegar en Google Cloud Run
+        id: deploy
         run: |
           gcloud run deploy challenge-segurarse \
             --image=${{ secrets.DOCKERHUB_USERNAME }}/challenge-segurarse:${{ github.sha }} \
             --platform=managed \
             --region=us-central1 \
             --allow-unauthenticated
-      - name: Notify Deployment
+          echo "DEPLOY_URL=$(gcloud run services describe challenge-segurarse --region=us-central1 --format='value(status.url)')" >> $GITHUB_OUTPUT
+      - name: Notificar despliegue
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: "🌐 Despliegue a Google Cloud Run completado: challenge-segurarse en us-central1."
+          message: "🌐 Despliegue a Google Cloud Run completado: challenge-segurarse en us-central1. URL: ${{ steps.deploy.outputs.DEPLOY_URL }}"
+      - name: Notificar fallo en despliegue
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "❌ Fallo al desplegar en Google Cloud Run."
