@@ -23,7 +23,7 @@ Instrucciones de Configuración
 
 Paso 1: Clonar el Repositorio
 
-*   Ejecuta el siguiente comando en tu terminal:git clone [git@github.com](mailto:git@github.com):R3NZ0FR5NCH377O/challenge-segurarse.git
+*   Ejecuta el siguiente comando en tu terminal:git clone [REPOSITORIO ACTUAL]
     
 *   Luego, accede al directorio del proyecto:cd challenge-segurarse
     
@@ -34,11 +34,11 @@ Paso 2: Construir y Probar la Imagen Localmente
     
 *   Ejecuta el contenedor para probarlo sin personalizar el nombre:docker run -p 8080:8080 challenge-segurarse:latest
     
-*   Abre tu navegador y visita [http://localhost:8080](http://localhost:8080). Deberías ver el mensaje:{"message": "Hola Segurarse, soy Renzo Franchetto"}
+*   Abre tu navegador y visita [http://localhost:8080](http://localhost:8080). Deberías ver el mensaje:"Hola Segurarse, soy Renzo Franchetto"
     
 *   Para probar con un nombre personalizado, usa una variable de entorno:docker run -p 8080:8080 -e USER_NAME="Maria Gomez" challenge-segurarse:latest
     
-*   Visita [http://localhost:8080](http://localhost:8080) nuevamente. Verás:{"message": "Hola Segurarse, soy Maria Gomez"}
+*   Visita [http://localhost:8080](http://localhost:8080) nuevamente. Verás:"Hola Segurarse, soy Maria Gomez"
     
 
 Paso 3: Configurar Secretos y Variables en GitHub
