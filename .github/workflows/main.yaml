@@ -63,7 +63,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: "🚀 Imagen Docker subida a DockerHub: ${{ secrets.DOCKERHUB_USERNAME }}/challenge-segurarse:${{ github.sha }}."
       - name: Notificar fallo en subida
-        if: failure stray()
+        if: failure()
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
