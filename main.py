@@ -1,12 +1,10 @@
+import os
 from fastapi import FastAPI
 
 app = FastAPI()
 
+user_name = os.getenv("USER_NAME", "Renzo Franchetto")
+
 @app.get("/")
 def read_root():
-    return {"message": "Hola Segurarse, soy Renzo"}
-
-if __name__ == "__main__":
-    import uvicorn
-    port = 8080
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    return {"message": f"Hola Segurarse, soy {user_name}"}
