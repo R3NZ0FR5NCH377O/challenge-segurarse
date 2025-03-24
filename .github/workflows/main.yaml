@@ -12,28 +12,64 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - name: Notify Checkout
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "✅ Checkout del repositorio completado en ${{ github.repository }} por ${{ github.actor }}."
 
       - name: Log in to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Notify DockerHub Login
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "🔑 Inicio de sesión en DockerHub completado."
 
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/challenge-segurarse:${{ github.sha }} .
+      - name: Notify Build
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "🏗️ Imagen Docker construida: ${{ secrets.DOCKERHUB_USERNAME }}/challenge-segurarse:${{ github.sha }}."
 
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/challenge-segurarse:${{ github.sha }}
+      - name: Notify Push
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "🚀 Imagen Docker subida a DockerHub: ${{ secrets.DOCKERHUB_USERNAME }}/challenge-segurarse:${{ github.sha }}."
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Notify GCP Auth
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "🔐 Autenticación con Google Cloud completada."
 
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Notify gcloud Setup
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "🛠️ Configuración de gcloud CLI completada para el proyecto ${{ secrets.GCP_PROJECT_ID }}."
 
       - name: Deploy to Google Cloud Run
         run: |
@@ -42,3 +78,9 @@ jobs:
             --platform=managed \
             --region=us-central1 \
             --allow-unauthenticated
+      - name: Notify Deployment
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "🌐 Despliegue a Google Cloud Run completado: challenge-segurarse en us-central1."
