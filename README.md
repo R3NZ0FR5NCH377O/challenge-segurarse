@@ -1,7 +1,7 @@
 Challenge Segurarse
 ===================
 
-Este proyecto implementa una aplicación simple de FastAPI desplegada en Google Cloud Run mediante un pipeline CI/CD automatizado. La aplicación expone un endpoint básico que devuelve un mensaje de saludo y está containerizada con Docker. Además, incluye notificaciones en Telegram y análisis estático de código con Bandit.
+Este proyecto implementa una aplicación simple de FastAPI desplegada en Google Cloud Run mediante un pipeline CI/CD automatizado. La aplicación expone un endpoint básico que devuelve un mensaje de saludo personalizado y está containerizada con Docker. El nombre en el mensaje es configurable mediante la variable de entorno USER\_NAME, con "Renzo Franchetto" como valor por defecto. Además, incluye notificaciones en Telegram y análisis estático de código con Bandit.
 
 Instrucciones de Configuración
 ------------------------------
@@ -16,7 +16,7 @@ Instrucciones de Configuración
     
 *   Telegram: Un bot y un grupo para recibir notificaciones.
     
-*   GitHub: Un repositorio con secretos configurados.
+*   GitHub: Un repositorio con secretos y variables configurados.
     
 
 ### Configuración Local
@@ -30,28 +30,38 @@ Paso 1: Clonar el Repositorio
 
 Paso 2: Construir y Probar la Imagen Localmente
 
-*   Construye la imagen Docker con este comando:docker build -t /challenge-segurarse:latest .
+*   Construye la imagen Docker con este comando:docker build -t challenge-segurarse:latest .
     
-*   Ejecuta el contenedor para probarlo:docker run -p 8080:8080 /challenge-segurarse:latest
+*   Ejecuta el contenedor para probarlo sin personalizar el nombre:docker run -p 8080:8080 challenge-segurarse:latest
     
-*   Abre tu navegador y visita [http://localhost:8080](http://localhost:8080). Deberías ver el mensaje: {"message": "Hola Segurarse, soy Renzo"}.
+*   Abre tu navegador y visita [http://localhost:8080](http://localhost:8080). Deberías ver el mensaje:{"message": "Hola Segurarse, soy Renzo Franchetto"}
+    
+*   Para probar con un nombre personalizado, usa una variable de entorno:docker run -p 8080:8080 -e USER_NAME="Maria Gomez" challenge-segurarse:latest
+    
+*   Visita [http://localhost:8080](http://localhost:8080) nuevamente. Verás:{"message": "Hola Segurarse, soy Maria Gomez"}
     
 
-Paso 3: Configurar Secretos en GitHub
+Paso 3: Configurar Secretos y Variables en GitHub
 
-*   Ve a la sección "Settings > Secrets and variables > Actions" en tu repositorio de GitHub y agrega las siguientes variables:
+*   Ve a la sección "Settings > Secrets and variables > Actions" en tu repositorio de GitHub.
     
-    *   DOCKERHUB\_USERNAME: Tu usuario de DockerHub.
+*   Agrega los siguientes secretos:
+    
+    *   DOCKERHUB_USERNAME: Tu usuario de DockerHub.
         
-    *   DOCKERHUB\_TOKEN: Token de acceso de DockerHub.
+    *   DOCKERHUB_TOKEN: Token de acceso de DockerHub.
         
-    *   GCP\_SA\_KEY: JSON de la clave de cuenta de servicio de GCP.
+    *   GCP_SA_KEY: JSON de la clave de cuenta de servicio de GCP.
         
-    *   GCP\_PROJECT\_ID: ID de tu proyecto en GCP.
+    *   GCP_PROJECT_ID: ID de tu proyecto en GCP.
         
-    *   TELEGRAM\_TOKEN: Token del bot de Telegram (obtenido de @BotFather).
+    *   TELEGRAM_TOKEN: Token del bot de Telegram (obtenido de @BotFather).
         
-    *   TELEGRAM\_CHAT\_ID: ID del grupo de Telegram (número negativo, obtenido con getUpdates).
+    *   TELEGRAM_CHAT_ID: ID del grupo de Telegram (número negativo, obtenido con getUpdates).
+        
+*   Agrega la siguiente variable de repositorio en la pestaña "Variables":
+    
+    *   USER_NAME: El nombre que aparecerá en el mensaje (por ejemplo, "Renzo Franchetto").
         
 
 Paso 4: Configurar Telegram
@@ -62,7 +72,7 @@ Paso 4: Configurar Telegram
     
 *   Para obtener el chat\_id del grupo, ejecuta este comando en tu terminal:curl [https://api.telegram.org/bot](https://api.telegram.org/bot)/getUpdates
     
-*   Busca el número negativo correspondiente al chat\_id en la respuesta.
+*   Busca el número negativo correspondiente al chat_id en la respuesta.
     
 
 Paso 5: Configuración en GCP
@@ -84,7 +94,9 @@ Paso 5: Configuración en GCP
     
 *   Puerto: Exponemos el puerto 8080, que es el estándar de Cloud Run, y configuro uvicorn para escuchar en él de forma estática (port = 8080) para simplicidad, aunque idealmente debería usar os.getenv("PORT", 8080) para mayor flexibilidad.
     
-*   Ejecución: El CMD \["python", "main.py"\] ejecuta el script principal, que inicia el servidor uvicorn con la aplicación FastAPI.
+*   Ejecución: El CMD \["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"\] ejecuta el servidor uvicorn con la aplicación FastAPI.
+    
+*   Personalización: El nombre en el mensaje se configura mediante la variable de entorno USER\_NAME, con "Renzo Franchetto" (autor del repositorio) como valor por defecto si no se especifica.
     
 *   Este enfoque prioriza simplicidad y rapidez para un desafío, asegurando que la aplicación sea portable y fácil de desplegar en Cloud Run.
     
@@ -108,7 +120,7 @@ El pipeline, definido en .github/workflows/main.yaml, automatiza el proceso de c
     
 *   Analizar Código con Bandit: Ejecuta un análisis estático y envía el reporte a Telegram.
     
-*   Desplegar en Google Cloud Run: Despliega la imagen en Cloud Run y captura la URL.
+*   Desplegar en Google Cloud Run: Despliega la imagen en Cloud Run con la variable USER_NAME tomada de las variables de repositorio en GitHub (${{ vars.USER_NAME }}), y captura la URL.
     
 *   Notificaciones: Cada paso envía un mensaje a un grupo de Telegram, incluyendo éxitos y fallos, con la URL del despliegue al final si todo sale bien.
     
