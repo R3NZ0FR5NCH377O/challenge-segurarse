@@ -1,4 +1,4 @@
-Challenge Segurarse
+Challenge Segurarse.
 ===================
 
 Este proyecto implementa una aplicación simple de FastAPI desplegada en Google Cloud Run mediante un pipeline CI/CD automatizado. La aplicación expone un endpoint básico que devuelve un mensaje de saludo personalizado y está containerizada con Docker. El nombre en el mensaje es configurable mediante la variable de entorno USER\_NAME, con "Renzo Franchetto" como valor por defecto. Además, incluye notificaciones en Telegram y análisis estático de código con Bandit.
